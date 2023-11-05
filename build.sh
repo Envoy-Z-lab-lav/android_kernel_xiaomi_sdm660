@@ -8,10 +8,23 @@
 # Basic Information
 KSU=1
 RELEASE=0
-DEVICE=Lavender
 ZIPNAME=S0NiX
 VERSION=R1
 COMPILER=neut # Specify compiler - nex, neut, aosp
+
+if [ "$2" == "--Tulip" ]; then
+DEVICE=Tulip
+elif [ "$2" = "--Jason" ]; then
+DEVICE=Jason
+elif [ "$2" = "--Platina" ]; then
+DEVICE=Platina
+elif [ "$2" = "--Whyred" ]; then
+DEVICE=Whyred
+elif [ "$2" = "--Wayne" ]; then
+DEVICE=Wayne
+else
+DEVICE=Lavender
+fi
 
 # Build Information
 MODEL=Xiaomi
@@ -148,6 +161,24 @@ if [ "$MSG" == "1" ]; then
 	post_msg "<b>$KBUILD_BUILD_VERSION CI Build Triggered</b>%0A<b>Docker OS: </b><code>$DISTRO</code>%0A<b>Kernel Version : </b><code>$KERVER</code>%0A<b>Date : </b><code>$(TZ=Asia/Kolkata date)</code>%0A<b>Device : </b><code>$MODEL [$DEVICE]</code>%0A<b>Pipeline Host : </b><code>$KBUILD_BUILD_HOST</code>%0A<b>Host Core Count : </b><code>$PROCS</code>%0A<b>Compiler Used : </b><code>$KBUILD_COMPILER_STRING</code>%0A<b>Branch : </b><code>$CI_BRANCH</code>%0A<b>Top Commit : </b><a href='$DRONE_COMMIT_LINK'>$COMMIT_HEAD</a>"
 fi
 
+# Create device defconfig
+DEF=arch/arm64/configs/${DEFCONFIG}
+MI=arch/arm64/configs/vendor/xiaomi
+if [ "$DEVICE" != "Lavender" ]; then
+        echo "$(cat $MI/RmLav.config)" >> $DEF
+fi
+if [ "$DEVICE" = "Tulip" ]; then
+	echo "$(cat $MI/tulip.config)" >> $DEF
+elif [ "$DEVICE" = "Jason" ]; then
+        echo "$(cat $MI/jason.config)" >> $DEF
+elif [ "$DEVICE" = "Platina" ]; then
+        echo "$(cat $MI/platina.config)" >> $DEF
+elif [ "$DEVICE" = "Whyred" ]; then
+        echo "$(cat $MI/whyred.config)" >> $DEF
+elif [ "$DEVICE" = "Wayne" ]; then
+        echo "$(cat $MI/wayne.config)" >> $DEF
+fi
+
 # Compile
 make O=out CC=clang ARCH=arm64 ${DEFCONFIG}
 if [ -d ${KERNEL_DIR}/clang ]; then
@@ -181,7 +212,7 @@ function zipping() {
 # Copy Files To AnyKernel3 Zip
 cp $IMAGE AnyKernel3
 
-FINAL_ZIP=${ZIPNAME}-${LOCAL_VER}-${KBUILD_BUILD_VERSION}.zip
+FINAL_ZIP=${ZIPNAME}-${LOCAL_VER}-${DEVICE}-${KBUILD_BUILD_VERSION}.zip
 
 # Zipping and Push Kernel
 cd AnyKernel3 || exit 1
